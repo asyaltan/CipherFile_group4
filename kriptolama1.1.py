@@ -71,6 +71,13 @@ def decrypt_ui():
     if sifrecoz(dosya, sifre):
         messagebox.showinfo("Başarılı", "Şifre çözüldü, .aes dosyası silindi.")
 
+def toggle_password():
+    # Eğer şifre gizliyse (*) göster, açık ise gizle
+    if password_entry.cget("show") == "*":
+        password_entry.configure(show="")
+    else:
+        password_entry.configure(show="*")
+
 # GUI PENCERE OLUŞTURMA
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -88,6 +95,10 @@ file_button.pack(pady=5)
 
 password_entry = ctk.CTkEntry(app, placeholder_text="Şifre girin", show="*")
 password_entry.pack(pady=10)
+
+# Şifreyi Göster Checkbox'ı (Göz ikonu görevi görür)
+show_pass_check = ctk.CTkCheckBox(app, text="Şifreyi Göster", command=toggle_password, checkbox_width=18, checkbox_height=18)
+show_pass_check.pack(pady=5)
 
 encrypt_button = ctk.CTkButton(app, text="Şifrele", command=encrypt_ui)
 encrypt_button.pack(pady=5)
