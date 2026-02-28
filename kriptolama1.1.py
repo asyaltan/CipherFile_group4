@@ -6,17 +6,13 @@ import secrets
 
 # GÜVENLİ SİLME (DATA WIPING) FONKSİYONU
 def guvenli_sil(dosya_yolu):
-    """Dosyanın üzerine rastgele veri yazarak kalıcı olarak siler."""
     try:
         if os.path.exists(dosya_yolu):
             boyut = os.path.getsize(dosya_yolu)
-            # Dosyayı binary modda açıp üzerine rastgele baytlar yazıyoruz
             with open(dosya_yolu, "ba+", buffering=0) as f:
                 f.write(secrets.token_bytes(boyut))
-            # Üzerine yazma işlemi bittikten sonra dosyayı siliyoruz
             os.remove(dosya_yolu)
     except:
-        # Eğer bir hata (dosya kilitli vb.) oluşursa standart silmeyi dene
         if os.path.exists(dosya_yolu):
             os.remove(dosya_yolu)
 
@@ -25,15 +21,13 @@ def guvenli_sil(dosya_yolu):
 def sifrele(dosya, sifre):
     bufferSize = 512 * 1024
     sifreli_dosya = str(dosya) + ".aes"
-
     try:
         pyAesCrypt.encryptFile(str(dosya), sifreli_dosya, sifre, bufferSize)
-        # Şifreleme bitti: Orijinal dosyayı güvenli sil
         guvenli_sil(dosya)
-    except FileNotFoundError:
-        messagebox.showerror("Hata", f"'{dosya}' adında bir dosya bulunamadı.")
+        return True # İşlem başarıyla bitti sinyali
     except Exception as e:
         messagebox.showerror("Hata", f"Şifreleme sırasında bir hata oluştu: {e}")
+        return False # Bir şeyler ters gitti sinyali
 
 def sifrecoz(dosya, sifre):
     bufferSize = 512 * 1024
@@ -44,13 +38,14 @@ def sifrecoz(dosya, sifre):
 
     try:
         pyAesCrypt.decryptFile(str(dosya), cozulmus_dosya, sifre, bufferSize)
-        # Çözme bitti: Şifreli (.aes) dosyayı güvenli sil
         guvenli_sil(dosya)
-    except FileNotFoundError:
-        messagebox.showerror("Hata", f"'{dosya}' adında bir dosya bulunamadı.")
+        return True # İşlem başarıyla bitti sinyali
+    except ValueError:
+        messagebox.showerror("Hata", "Şifre yanlış! Lütfen tekrar deneyin.")
+        return False
     except Exception as e:
-        messagebox.showerror("Hata", f"Şifre çözme sırasında bir hata oluştu: {e}")
-
+        messagebox.showerror("Hata", f"Şifre çözme hatası: {e}")
+        return False
 
 # GUI ARA FONKSİYONLARI
 
@@ -60,8 +55,10 @@ def encrypt_ui():
     if dosya == "" or sifre == "":
         messagebox.showerror("Hata", "Dosya veya şifre boş olamaz.")
         return
-    sifrele(dosya, sifre)
-    messagebox.showinfo("Başarılı", "Dosya şifrelendi, orijinali silindi.")
+    
+    # EĞER (if) fonksiyon True dönerse başarı mesajını göster
+    if sifrele(dosya, sifre):
+        messagebox.showinfo("Başarılı", "Dosya şifrelendi, orijinali silindi.")
 
 def decrypt_ui():
     dosya = selected_file.get()
@@ -69,21 +66,20 @@ def decrypt_ui():
     if dosya == "" or sifre == "":
         messagebox.showerror("Hata", "Dosya veya şifre boş olamaz.")
         return
-    sifrecoz(dosya, sifre)
-    messagebox.showinfo("Başarılı", "Şifre çözüldü, .aes dosyası silindi.")
-
+    
+    # EĞER (if) fonksiyon True dönerse başarı mesajını göster
+    if sifrecoz(dosya, sifre):
+        messagebox.showinfo("Başarılı", "Şifre çözüldü, .aes dosyası silindi.")
 
 # GUI PENCERE OLUŞTURMA
-
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 app = ctk.CTk()
 app.geometry("500x400")
-app.title("AES Dosya Şifreleme")
+app.title("CipherFile - AES Şifreleme")
 
 selected_file = ctk.StringVar()
-
 file_entry = ctk.CTkEntry(app, textvariable=selected_file, width=300)
 file_entry.pack(pady=20)
 
