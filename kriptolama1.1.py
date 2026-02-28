@@ -3,9 +3,11 @@ import os
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import secrets
+import threading # Asenkron (arka plan) işlemler için gerekli kütüphane
 
 # GÜVENLİ SİLME (DATA WIPING) FONKSİYONU
 def guvenli_sil(dosya_yolu):
+    """Dosyanın üzerine rastgele baytlar yazarak adli bilişimle geri döndürülmesini engeller."""
     try:
         if os.path.exists(dosya_yolu):
             boyut = os.path.getsize(dosya_yolu)
@@ -16,94 +18,92 @@ def guvenli_sil(dosya_yolu):
         if os.path.exists(dosya_yolu):
             os.remove(dosya_yolu)
 
-# ŞİFRELEME FONKSİYONLARI
-
-def sifrele(dosya, sifre):
+# ARKA PLAN İŞÇİSİ (WORKER THREAD)
+def islem_yap_arka_plan(islem_turu, dosya, sifre):
+    """Ağır şifreleme işlemini arayüzü dondurmadan arka planda yürüten fonksiyon."""
     bufferSize = 512 * 1024
-    sifreli_dosya = str(dosya) + ".aes"
+    success = False
+    
     try:
-        pyAesCrypt.encryptFile(str(dosya), sifreli_dosya, sifre, bufferSize)
-        guvenli_sil(dosya)
-        return True # İşlem başarıyla bitti sinyali
+        if islem_turu == "sifrele":
+            sifreli_dosya = str(dosya) + ".aes"
+            pyAesCrypt.encryptFile(str(dosya), sifreli_dosya, sifre, bufferSize)
+            guvenli_sil(dosya)
+            success = True
+        else:
+            if str(dosya).endswith(".aes"):
+                cozulmus_dosya = str(dosya)[:-4]
+            else:
+                cozulmus_dosya = "cozulmus_" + str(dosya)
+            pyAesCrypt.decryptFile(str(dosya), cozulmus_dosya, sifre, bufferSize)
+            guvenli_sil(dosya)
+            success = True
+            
+        app.after(0, lambda: islem_tamamlandi(success, islem_turu))
+        
     except Exception as e:
-        messagebox.showerror("Hata", f"Şifreleme sırasında bir hata oluştu: {e}")
-        return False # Bir şeyler ters gitti sinyali
+        # Hata durumunda hata mesajını arayüze gönder
+        app.after(0, lambda: islem_tamamlandi(False, islem_turu, str(e)))
 
-def sifrecoz(dosya, sifre):
-    bufferSize = 512 * 1024
-    if str(dosya).endswith(".aes"):
-        cozulmus_dosya = str(dosya)[:-4]
-    else:
-        cozulmus_dosya = "cozulmus_" + str(dosya)
+# ARAYÜZ YÖNETİMİ
 
-    try:
-        pyAesCrypt.decryptFile(str(dosya), cozulmus_dosya, sifre, bufferSize)
-        guvenli_sil(dosya)
-        return True # İşlem başarıyla bitti sinyali
-    except ValueError:
-        messagebox.showerror("Hata", "Şifre yanlış! Lütfen tekrar deneyin.")
-        return False
-    except Exception as e:
-        messagebox.showerror("Hata", f"Şifre çözme hatası: {e}")
-        return False
-
-# GUI ARA FONKSİYONLARI
-
-def encrypt_ui():
+def baslat(islem_turu):
+    """Butona basıldığında hazırlıkları yapar ve arka plan işçisini başlatır."""
     dosya = selected_file.get()
     sifre = password_entry.get()
-    if dosya == "" or sifre == "":
-        messagebox.showerror("Hata", "Dosya veya şifre boş olamaz.")
-        return
     
-    # EĞER (if) fonksiyon True dönerse başarı mesajını göster
-    if sifrele(dosya, sifre):
-        messagebox.showinfo("Başarılı", "Dosya şifrelendi, orijinali silindi.")
-
-def decrypt_ui():
-    dosya = selected_file.get()
-    sifre = password_entry.get()
-    if dosya == "" or sifre == "":
-        messagebox.showerror("Hata", "Dosya veya şifre boş olamaz.")
+    if not dosya or not sifre:
+        messagebox.showwarning("Eksik Bilgi", "Lütfen dosya seçin ve bir şifre belirleyin.")
         return
-    
-    # EĞER (if) fonksiyon True dönerse başarı mesajını göster
-    if sifrecoz(dosya, sifre):
-        messagebox.showinfo("Başarılı", "Şifre çözüldü, .aes dosyası silindi.")
 
-def toggle_password():
-    # Eğer şifre gizliyse (*) göster, açık ise gizle
-    if password_entry.cget("show") == "*":
-        password_entry.configure(show="")
+    # İşlem başlarken arayüz elemanlarını hazırla ve kilitle
+    progress_bar.set(0)
+    progress_bar.pack(pady=10) # İlerleme çubuğunu görünür yap
+    progress_bar.start() # Animasyonu başlat
+    encrypt_button.configure(state="disabled")
+    decrypt_button.configure(state="disabled")
+
+    # Çoklu iş parçacığı (Threading) başlatılıyor
+    threading.Thread(target=islem_yap_arka_plan, args=(islem_turu, dosya, sifre), daemon=True).start()
+
+def islem_tamamlandi(basari, tur, hata=""):
+    """Arka plandaki işlem bittiğinde arayüzü eski haline getiren geri çağırma fonksiyonu."""
+    progress_bar.stop()
+    progress_bar.pack_forget() # Çubuğu gizle
+    encrypt_button.configure(state="normal")
+    decrypt_button.configure(state="normal")
+
+    if basari:
+        islem_adi = "şifrelendi" if tur == "sifrele" else "çözüldü"
+        messagebox.showinfo("Başarılı", f"Dosya güvenle {islem_adi} ve orijinali imha edildi.")
     else:
-        password_entry.configure(show="*")
+        # Şifre yanlışsa pyAesCrypt ValueError fırlatır
+        messagebox.showerror("İşlem Başarısız", f"Hata detayı: {hata}")
 
-# GUI PENCERE OLUŞTURMA
+# ANA PENCERE TASARIMI 
 ctk.set_appearance_mode("Dark")
-ctk.set_default_color_theme("blue")
-
 app = ctk.CTk()
-app.geometry("500x400")
-app.title("CipherFile - AES Şifreleme")
+app.geometry("500x480")
+app.title("CipherFile v2.0 - Asenkron AES Güvenliği")
 
 selected_file = ctk.StringVar()
-file_entry = ctk.CTkEntry(app, textvariable=selected_file, width=300)
-file_entry.pack(pady=20)
+# Dosya yolu giriş alanı
+ctk.CTkEntry(app, textvariable=selected_file, width=350, placeholder_text="Dosya yolu...").pack(pady=20)
+# Dosya seçme diyaloğu butonu
+ctk.CTkButton(app, text="📂 Dosya Seç", command=lambda: selected_file.set(filedialog.askopenfilename())).pack(pady=5)
 
-file_button = ctk.CTkButton(app, text="Dosya Seç", command=lambda: selected_file.set(filedialog.askopenfilename()))
-file_button.pack(pady=5)
-
-password_entry = ctk.CTkEntry(app, placeholder_text="Şifre girin", show="*")
+# Şifre giriş alanı 
+password_entry = ctk.CTkEntry(app, placeholder_text="Anahtar Şifre", show="*", width=350)
 password_entry.pack(pady=10)
 
-# Şifreyi Göster Checkbox'ı (Göz ikonu görevi görür)
-show_pass_check = ctk.CTkCheckBox(app, text="Şifreyi Göster", command=toggle_password, checkbox_width=18, checkbox_height=18)
-show_pass_check.pack(pady=5)
-
-encrypt_button = ctk.CTkButton(app, text="Şifrele", command=encrypt_ui)
+# Şifreleme ve Çözme butonları
+encrypt_button = ctk.CTkButton(app, text="🔒 Şifrele", fg_color="#D22B2B", command=lambda: baslat("sifrele"))
 encrypt_button.pack(pady=5)
 
-decrypt_button = ctk.CTkButton(app, text="Şifre Çöz", command=decrypt_ui)
+decrypt_button = ctk.CTkButton(app, text="🔓 Şifre Çöz", fg_color="#228B22", command=lambda: baslat("coz"))
 decrypt_button.pack(pady=5)
+
+# Dinamik ilerleme çubuğu (İşlem sırasında görünür)
+progress_bar = ctk.CTkProgressBar(app, width=350, mode="indeterminate", progress_color="#FFCC00")
 
 app.mainloop()
