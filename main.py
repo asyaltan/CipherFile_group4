@@ -106,4 +106,5 @@ decrypt_button.pack(pady=5)
 # Dinamik ilerleme çubuğu (İşlem sırasında görünür)
 progress_bar = ctk.CTkProgressBar(app, width=350, mode="indeterminate", progress_color="#FFCC00")
 
+
 app.mainloop()
