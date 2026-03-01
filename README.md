@@ -13,6 +13,7 @@ Modern Arayüz (GUI): `CustomTkinter` kütüphanesi kullanılarak geliştirilen,
 Kriptografik Güç: Dosya şifreleme standardı olarak güvenilir `pyAesCrypt` (AES-256-CBC)ile tam güvenilirlik sağlar.
 
 ![CipherFile Uygulama Arayüzü](cipherfile_demo.png)
+
 Görsel: Asenkron şifreleme işlemi sırasında dinamik ilerleme çubuğu ve buton kilitlenme mekanizması.
 
 🚀 Kurulum ve Çalıştırma
@@ -20,6 +21,7 @@ Görsel: Asenkron şifreleme işlemi sırasında dinamik ilerleme çubuğu ve bu
 Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin:
 
 1. Yöntem 1:
+
  Depoyu Klonlayın
 ```bash
 git clone https://github.com/kullaniciadi/CipherFile.git
@@ -27,7 +29,9 @@ cd CipherFile
 
 ```
    Yöntem 2:
+ 
  Manuel İndirme
+ 
 Sayfanın üstündeki yeşil Code butonuna tıklayın.
 
 Download ZIP seçeneği ile dosyaları indirin ve klasöre çıkarın.
@@ -72,6 +76,7 @@ Uygulama, `guvenli_sil` fonksiyonu ile dosya boyutunu analiz eder ve `secrets.to
 * [Yağız Yasin CAN]
 * [Rabia Nur KUZÇALI]
 * [Ege Talha KURBAN]
+
 
 
 
