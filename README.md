@@ -12,6 +12,9 @@ Modern Arayüz (GUI): `CustomTkinter` kütüphanesi kullanılarak geliştirilen,
 
 Kriptografik Güç: Dosya şifreleme standardı olarak güvenilir `pyAesCrypt` (AES-256-CBC)ile tam güvenilirlik sağlar.
 
+![CipherFile Uygulama Arayüzü](cipherfile_demo.png)
+Görsel: Asenkron şifreleme işlemi sırasında dinamik ilerleme çubuğu ve buton kilitlenme mekanizması.
+
 🚀 Kurulum ve Çalıştırma
 
 Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin:
@@ -63,4 +66,5 @@ Uygulama, `guvenli_sil` fonksiyonu ile dosya boyutunu analiz eder ve `secrets.to
 * [Yağız Yasin CAN]
 * [Rabia Nur KUZÇALI]
 * [Ege Talha KURBAN]
+
 
