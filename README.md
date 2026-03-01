@@ -19,12 +19,18 @@ Görsel: Asenkron şifreleme işlemi sırasında dinamik ilerleme çubuğu ve bu
 
 Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin:
 
-1. Depoyu Klonlayın:
+1. Yöntem 1:
+ Depoyu Klonlayın
 ```bash
 git clone https://github.com/kullaniciadi/CipherFile.git
 cd CipherFile
 
 ```
+   Yöntem 2:
+ Manuel İndirme
+Sayfanın üstündeki yeşil Code butonuna tıklayın.
+
+Download ZIP seçeneği ile dosyaları indirin ve klasöre çıkarın.
 
 
 2. Gerekli Kütüphaneleri Yükleyin:
@@ -66,5 +72,6 @@ Uygulama, `guvenli_sil` fonksiyonu ile dosya boyutunu analiz eder ve `secrets.to
 * [Yağız Yasin CAN]
 * [Rabia Nur KUZÇALI]
 * [Ege Talha KURBAN]
+
 
 
